@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
-import { MusicPlayer } from './components/MusicPlayer';
 
 function App() {
   return (
@@ -10,9 +9,6 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
         </Routes>
-        
-        {/* Background Music Player */}
-        <MusicPlayer />
         
         {/* Made by Bolt overlay */}
         <div className="fixed bottom-4 left-4 z-50">

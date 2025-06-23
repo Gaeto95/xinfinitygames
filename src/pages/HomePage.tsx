@@ -7,6 +7,7 @@ import { GenerationModal } from '../components/GenerationModal';
 import { PromptModal } from '../components/PromptModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { StatsPanel } from '../components/StatsPanel';
+import { MusicButton } from '../components/MusicButton';
 
 export function HomePage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -173,23 +174,26 @@ export function HomePage() {
               </div>
             </div>
             
-            <button
-              onClick={handleGenerateClick}
-              disabled={generating}
-              className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25"
-            >
-              {generating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-5 h-5" />
-                  <span>Generate Game</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center space-x-4">
+              <MusicButton />
+              <button
+                onClick={handleGenerateClick}
+                disabled={generating}
+                className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                {generating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5" />
+                    <span>Generate Game</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
