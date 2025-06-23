@@ -18,68 +18,80 @@ Deno.serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    console.log('Starting game generation...')
+    // Parse request body to get user prompt
+    let userPrompt = '';
+    try {
+      const body = await req.json();
+      userPrompt = body.user_prompt || '';
+    } catch (error) {
+      console.log('No request body or invalid JSON, proceeding without user prompt');
+    }
+
+    console.log('Starting game generation with user prompt:', userPrompt || 'No prompt provided');
     
-    // Generate game idea with much more diverse prompts
-    const gameTypes = [
-      "endless runner with unique mechanics",
-      "puzzle game with physics",
-      "arcade shooter with power-ups",
-      "platformer with special abilities",
-      "rhythm-based action game",
-      "maze navigation challenge",
-      "reaction time tester",
-      "memory pattern game",
-      "resource management mini-game",
-      "physics-based destruction game"
-    ];
+    // Generate game idea with user prompt or random generation
+    let ideaPrompt = '';
     
-    const themes = [
-      "space exploration",
-      "underwater adventure",
-      "magical forest",
-      "cyberpunk city",
-      "ancient temple",
-      "candy world",
-      "robot factory",
-      "dinosaur era",
-      "alien planet",
-      "steampunk laboratory"
-    ];
-    
-    const mechanics = [
-      "collect items while avoiding obstacles",
-      "match patterns under time pressure",
-      "stack objects without falling",
-      "navigate through moving barriers",
-      "defend against waves of enemies",
-      "solve puzzles to progress",
-      "race against the clock",
-      "balance resources carefully",
-      "chain combos for higher scores",
-      "survive as long as possible"
-    ];
-    
-    const randomType = gameTypes[Math.floor(Math.random() * gameTypes.length)];
-    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-    const randomMechanic = mechanics[Math.floor(Math.random() * mechanics.length)];
-    
-    const ideaResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'You create unique, creative browser mini-games. Each game should have completely different mechanics, visuals, and gameplay from typical games. Be creative and weird!'
-          },
-          {
-            role: 'user',
-            content: `Create a unique ${randomType} set in a ${randomTheme} where the player must ${randomMechanic}.
+    if (userPrompt.trim()) {
+      // Use user's prompt directly
+      ideaPrompt = `Create a unique browser mini-game based on this description: "${userPrompt}"
+
+REQUIREMENTS:
+- Must be playable in a web browser
+- Should be fun and engaging
+- Include clear objectives and controls
+- Make it creative and unique
+- Keep the core concept focused
+
+Format: 
+Title: [Creative Game Name]
+Description: [One sentence describing the core gameplay]`;
+    } else {
+      // Generate random game idea
+      const gameTypes = [
+        "endless runner with unique mechanics",
+        "puzzle game with physics",
+        "arcade shooter with power-ups",
+        "platformer with special abilities",
+        "rhythm-based action game",
+        "maze navigation challenge",
+        "reaction time tester",
+        "memory pattern game",
+        "resource management mini-game",
+        "physics-based destruction game"
+      ];
+      
+      const themes = [
+        "space exploration",
+        "underwater adventure",
+        "magical forest",
+        "cyberpunk city",
+        "ancient temple",
+        "candy world",
+        "robot factory",
+        "dinosaur era",
+        "alien planet",
+        "steampunk laboratory"
+      ];
+      
+      const mechanics = [
+        "collect items while avoiding obstacles",
+        "match patterns under time pressure",
+        "stack objects without falling",
+        "navigate through moving barriers",
+        "defend against waves of enemies",
+        "solve puzzles to progress",
+        "race against the clock",
+        "balance resources carefully",
+        "chain combos for higher scores",
+        "survive as long as possible"
+      ];
+      
+      const randomType = gameTypes[Math.floor(Math.random() * gameTypes.length)];
+      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+      const randomMechanic = mechanics[Math.floor(Math.random() * mechanics.length)];
+      
+      ideaPrompt = `Create a unique ${randomType} set in a ${randomTheme} where the player must ${randomMechanic}.
 
 REQUIREMENTS:
 - Must be completely different from typical games
@@ -97,7 +109,25 @@ Examples of CREATIVE concepts:
 
 Format: 
 Title: [Creative Unique Name]
-Description: [One sentence describing the unique core gameplay]`
+Description: [One sentence describing the unique core gameplay]`;
+    }
+    
+    const ideaResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You create unique, creative browser mini-games. Each game should have completely different mechanics, visuals, and gameplay from typical games. Be creative and weird!'
+          },
+          {
+            role: 'user',
+            content: ideaPrompt
           }
         ],
         max_tokens: 150,
@@ -204,6 +234,7 @@ Description: [One sentence describing the unique core gameplay]`
             role: 'user',
             content: `Create a complete HTML game for: "${title}"
 Concept: ${description}
+${userPrompt ? `User's original request: "${userPrompt}"` : ''}
 
 CRITICAL UNIQUENESS REQUIREMENTS:
 ✅ Must have UNIQUE controls (not standard arrow keys - try mouse, WASD, spacebar, click-and-drag, etc.)
@@ -257,7 +288,7 @@ Provide ONLY the complete HTML code with no markdown formatting.`
       const errorText = await codeResponse.text()
       console.error('Code generation failed:', errorText)
       // Use diverse fallback instead of same template
-      const gameCode = createDiverseFallbackGame(title, description, randomType, randomTheme)
+      const gameCode = createDiverseFallbackGame(title, description, userPrompt)
       return await saveAndReturnGame(supabaseUrl, supabaseKey, title, description, gameCode, thumbnailUrl)
     }
 
@@ -276,7 +307,7 @@ Provide ONLY the complete HTML code with no markdown formatting.`
     // Validate the generated code
     if (!gameCode.includes('<!DOCTYPE html>') || !gameCode.includes('<html>')) {
       console.log('Generated code invalid, using diverse fallback')
-      gameCode = createDiverseFallbackGame(title, description, randomType, randomTheme)
+      gameCode = createDiverseFallbackGame(title, description, userPrompt)
     }
 
     return await saveAndReturnGame(supabaseUrl, supabaseKey, title, description, gameCode, thumbnailUrl)
@@ -336,14 +367,14 @@ async function saveAndReturnGame(supabaseUrl: string, supabaseKey: string, title
   )
 }
 
-function createDiverseFallbackGame(title: string, description: string, gameType: string, theme: string): string {
+function createDiverseFallbackGame(title: string, description: string, userPrompt: string): string {
   // Create different fallback games based on the type and theme
   const fallbackTemplates = [
-    createShooterGame(title, description, theme),
-    createPuzzleGame(title, description, theme),
-    createPlatformerGame(title, description, theme),
-    createRacingGame(title, description, theme),
-    createRhythmGame(title, description, theme)
+    createShooterGame(title, description),
+    createPuzzleGame(title, description),
+    createPlatformerGame(title, description),
+    createRacingGame(title, description),
+    createRhythmGame(title, description)
   ];
   
   // Select a random template
@@ -351,7 +382,7 @@ function createDiverseFallbackGame(title: string, description: string, gameType:
   return randomTemplate;
 }
 
-function createShooterGame(title: string, description: string, theme: string): string {
+function createShooterGame(title: string, description: string): string {
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
   const primaryColor = colors[Math.floor(Math.random() * colors.length)];
   const secondaryColor = colors[Math.floor(Math.random() * colors.length)];
@@ -426,7 +457,7 @@ h1 { margin-bottom: 10px; font-size: 24px; color: ${primaryColor}; }
   
   <div class="controls">Click to SHOOT • Move mouse to AIM • Destroy all targets!</div>
   
-  <button onclick="startGame()" id="startBtn">Start Shooting</button>
+  <button onclick="startGame()" id="startBtn">Start Game</button>
   <button onclick="resetGame()">Reset</button>
 </div>
 
@@ -460,7 +491,7 @@ canvas.addEventListener('click', () => {
 function startGame() {
   if (game.running) return;
   game.running = true;
-  document.getElementById('startBtn').textContent = 'Shooting...';
+  document.getElementById('startBtn').textContent = 'Playing...';
   spawnEnemies();
   gameLoop();
 }
@@ -651,7 +682,7 @@ function resetGame() {
   game.score = 0;
   game.level = 1;
   updateDisplay();
-  document.getElementById('startBtn').textContent = 'Start Shooting';
+  document.getElementById('startBtn').textContent = 'Start Game';
   
   const gradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
   gradient.addColorStop(0, '#1a1a2e');
@@ -664,7 +695,7 @@ function resetGame() {
 </html>`;
 }
 
-function createPuzzleGame(title: string, description: string, theme: string): string {
+function createPuzzleGame(title: string, description: string): string {
   const colors = ['#9B59B6', '#3498DB', '#E74C3C', '#F39C12', '#2ECC71', '#E67E22'];
   const primaryColor = colors[Math.floor(Math.random() * colors.length)];
   
@@ -841,7 +872,7 @@ startGame();
 </html>`;
 }
 
-function createPlatformerGame(title: string, description: string, theme: string): string {
+function createPlatformerGame(title: string, description: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1111,7 +1142,7 @@ function endGame() {
 </html>`;
 }
 
-function createRacingGame(title: string, description: string, theme: string): string {
+function createRacingGame(title: string, description: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1370,7 +1401,7 @@ function endGame() {
 </html>`;
 }
 
-function createRhythmGame(title: string, description: string, theme: string): string {
+function createRhythmGame(title: string, description: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -4,6 +4,7 @@ import { supabase, Game } from '../lib/supabase';
 import { GameCard } from '../components/GameCard';
 import { GameModal } from '../components/GameModal';
 import { GenerationModal } from '../components/GenerationModal';
+import { PromptModal } from '../components/PromptModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { StatsPanel } from '../components/StatsPanel';
 
@@ -14,6 +15,7 @@ export function HomePage() {
   const [generating, setGenerating] = useState(false);
   const [generationStage, setGenerationStage] = useState('thinking');
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
+  const [showPromptModal, setShowPromptModal] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -56,7 +58,12 @@ export function HomePage() {
     );
   };
 
-  const generateNewGame = async () => {
+  const handleGenerateClick = () => {
+    setShowPromptModal(true);
+  };
+
+  const generateNewGame = async (userPrompt: string = '') => {
+    setShowPromptModal(false);
     setGenerating(true);
     setGenerationStage('thinking');
     
@@ -75,7 +82,7 @@ export function HomePage() {
       }
 
       const functionUrl = `${supabaseUrl}/functions/v1/generate-game`;
-      console.log('Starting game generation immediately at:', functionUrl);
+      console.log('Starting game generation with prompt:', userPrompt || 'No prompt (surprise me)');
       
       // Start the API call immediately - no fake delays
       const response = await fetch(functionUrl, {
@@ -84,6 +91,9 @@ export function HomePage() {
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ 
+          user_prompt: userPrompt.trim() || null 
+        }),
         // Add timeout to prevent hanging
         signal: AbortSignal.timeout(120000) // 2 minutes timeout
       });
@@ -164,7 +174,7 @@ export function HomePage() {
             </div>
             
             <button
-              onClick={generateNewGame}
+              onClick={handleGenerateClick}
               disabled={generating}
               className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25"
             >
@@ -298,6 +308,14 @@ export function HomePage() {
       <GameModal
         game={selectedGame}
         onClose={() => setSelectedGame(null)}
+      />
+
+      {/* Prompt Modal */}
+      <PromptModal
+        isOpen={showPromptModal}
+        onClose={() => setShowPromptModal(false)}
+        onSubmit={generateNewGame}
+        isGenerating={generating}
       />
 
       {/* Generation Modal */}
