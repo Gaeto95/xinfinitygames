@@ -154,7 +154,7 @@ export function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section with Stats Panel */}
       <section className="py-20 px-4 text-center relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -163,31 +163,36 @@ export function HomePage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-pulse"></div>
         </div>
         
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="inline-flex items-center space-x-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-gray-700/50">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="text-gray-200 text-sm font-medium">AI-Powered Game Creation</span>
-          </div>
-          
-          <h2 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Infinite
-            </span>
-            <br />
-            <span className="text-white drop-shadow-lg">Possibilities</span>
-          </h2>
-          
-          <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
-            Experience weird, funny, and chaotic browser mini-games generated completely by AI. 
-            Each game is unique, unexpected, and ready to play instantly.
-          </p>
-        </div>
-      </section>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Left side - Hero Content */}
+            <div className="lg:col-span-2">
+              <div className="inline-flex items-center space-x-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-gray-700/50">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span className="text-gray-200 text-sm font-medium">AI-Powered Game Creation</span>
+              </div>
+              
+              <h2 className="text-5xl md:text-7xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Infinite
+                </span>
+                <br />
+                <span className="text-white drop-shadow-lg">Possibilities</span>
+              </h2>
+              
+              <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto lg:mx-0 leading-relaxed drop-shadow-sm">
+                Experience weird, funny, and chaotic browser mini-games generated completely by AI. 
+                Each game is unique, unexpected, and ready to play instantly.
+              </p>
+            </div>
 
-      {/* Statistics Panel - Moved here, right after hero section */}
-      <section className="pb-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <StatsPanel />
+            {/* Right side - Compact Stats Panel */}
+            <div className="lg:col-span-1 flex justify-center lg:justify-end">
+              <div className="w-full max-w-sm">
+                <StatsPanel />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
