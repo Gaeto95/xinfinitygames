@@ -74,27 +74,10 @@ export function HomePage() {
         throw new Error('Missing Supabase configuration. Please check your .env file contains VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
       }
 
-      // Realistic generation stages with proper timing (total ~35 seconds)
-      const stages = [
-        { id: 'thinking', delay: 4000 },    // 4 seconds - AI thinking
-        { id: 'idea', delay: 6000 },        // 6 seconds - Generating concept
-        { id: 'art', delay: 8000 },         // 8 seconds - Creating thumbnail
-        { id: 'coding', delay: 12000 },     // 12 seconds - Writing game code
-        { id: 'magic', delay: 3000 },       // 3 seconds - Final processing
-        { id: 'final', delay: 2000 }        // 2 seconds - Saving to database
-      ];
-      
-      // Show each stage with proper timing
-      for (let i = 0; i < stages.length; i++) {
-        setGenerationStage(stages[i].id);
-        if (i < stages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, stages[i].delay));
-        }
-      }
-
       const functionUrl = `${supabaseUrl}/functions/v1/generate-game`;
-      console.log('Calling edge function at:', functionUrl);
+      console.log('Starting game generation immediately at:', functionUrl);
       
+      // Start the API call immediately - no fake delays
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
