@@ -103,12 +103,12 @@ export function StatsPanel() {
 
   if (loading) {
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
         <div className="animate-pulse">
-          <div className="h-3 bg-gray-600 rounded w-1/2 mb-3"></div>
-          <div className="space-y-2">
-            <div className="h-2 bg-gray-600 rounded"></div>
-            <div className="h-2 bg-gray-600 rounded w-5/6"></div>
+          <div className="h-5 bg-gray-600 rounded w-1/2 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-600 rounded"></div>
+            <div className="h-4 bg-gray-600 rounded w-5/6"></div>
           </div>
         </div>
       </div>
@@ -117,101 +117,101 @@ export function StatsPanel() {
 
   if (!stats) {
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
         <div className="text-center text-gray-400">
-          <Bot className="w-6 h-6 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Statistics unavailable</p>
+          <Bot className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-base">Statistics unavailable</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 shadow-xl">
-      <div className="flex items-center space-x-2 mb-4">
-        <div className="p-1.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg">
-          <TrendingUp className="w-4 h-4 text-cyan-400" />
+    <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 shadow-xl">
+      <div className="flex items-center space-x-3 mb-6">
+        <div className="p-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg">
+          <TrendingUp className="w-6 h-6 text-cyan-400" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-white">Generation Statistics</h3>
-          <p className="text-gray-400 text-xs">AI-powered game creation metrics</p>
+          <h3 className="text-lg font-bold text-white">Generation Statistics</h3>
+          <p className="text-gray-400 text-sm">AI-powered game creation metrics</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {/* Total Games */}
-        <div className="bg-gray-700/50 rounded-lg p-2 border border-gray-600/50">
+        <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600/50">
           <div className="text-center">
-            <div className="p-1 bg-cyan-500/20 rounded-md mx-auto w-fit mb-1">
-              <Bot className="w-3 h-3 text-cyan-400" />
+            <div className="p-2 bg-cyan-500/20 rounded-lg mx-auto w-fit mb-2">
+              <Bot className="w-5 h-5 text-cyan-400" />
             </div>
-            <p className="text-lg font-bold text-white">{stats.total_games_generated}</p>
-            <p className="text-gray-400 text-xs">Games</p>
+            <p className="text-2xl font-bold text-white">{stats.total_games_generated}</p>
+            <p className="text-gray-400 text-sm">Games</p>
           </div>
         </div>
 
         {/* Total Users */}
-        <div className="bg-gray-700/50 rounded-lg p-2 border border-gray-600/50">
+        <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600/50">
           <div className="text-center">
-            <div className="p-1 bg-purple-500/20 rounded-md mx-auto w-fit mb-1">
-              <Users className="w-3 h-3 text-purple-400" />
+            <div className="p-2 bg-purple-500/20 rounded-lg mx-auto w-fit mb-2">
+              <Users className="w-5 h-5 text-purple-400" />
             </div>
-            <p className="text-lg font-bold text-white">{stats.total_users_generated}</p>
-            <p className="text-gray-400 text-xs">Users</p>
+            <p className="text-2xl font-bold text-white">{stats.total_users_generated}</p>
+            <p className="text-gray-400 text-sm">Users</p>
           </div>
         </div>
 
         {/* Auto Generations */}
-        <div className="bg-gray-700/50 rounded-lg p-2 border border-gray-600/50">
+        <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600/50">
           <div className="text-center">
-            <div className="p-1 bg-green-500/20 rounded-md mx-auto w-fit mb-1">
-              <Zap className="w-3 h-3 text-green-400" />
+            <div className="p-2 bg-green-500/20 rounded-lg mx-auto w-fit mb-2">
+              <Zap className="w-5 h-5 text-green-400" />
             </div>
-            <p className="text-lg font-bold text-white">
+            <p className="text-2xl font-bold text-white">
               {stats.total_games_generated - stats.total_users_generated}
             </p>
-            <p className="text-gray-400 text-xs">Auto</p>
+            <p className="text-gray-400 text-sm">Auto</p>
           </div>
         </div>
       </div>
 
       {/* Next Auto Generation */}
-      <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-lg p-3 border border-cyan-500/20">
+      <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-lg p-4 border border-cyan-500/20 mb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="p-1 bg-cyan-500/20 rounded-md">
-              <Clock className="w-3 h-3 text-cyan-400" />
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <Clock className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Next Auto-Gen</p>
-              <p className="text-gray-300 text-xs">Every 3 hours</p>
+              <p className="text-white font-semibold text-base">Next Auto-Generation</p>
+              <p className="text-gray-300 text-sm">AI creates a new game every 3 hours</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg font-mono font-bold text-cyan-400">
+            <p className="text-2xl font-mono font-bold text-cyan-400">
               {timeUntilNext || 'Loading...'}
             </p>
-            <p className="text-gray-400 text-xs">HH:MM:SS</p>
+            <p className="text-gray-400 text-sm">HH:MM:SS</p>
           </div>
         </div>
       </div>
 
       {/* Last Generation Info */}
       {stats.last_auto_generation && (
-        <div className="mt-3 pt-3 border-t border-gray-700/50">
-          <p className="text-gray-400 text-xs">
-            Last: {new Date(stats.last_auto_generation).toLocaleString()}
+        <div className="mb-4 pt-4 border-t border-gray-700/50">
+          <p className="text-gray-400 text-sm">
+            Last auto-generation: {new Date(stats.last_auto_generation).toLocaleString()}
           </p>
         </div>
       )}
 
       {/* Debug: Manual trigger button (remove in production) */}
-      <div className="mt-3 pt-3 border-t border-gray-700/50">
+      <div className="pt-4 border-t border-gray-700/50">
         <button
           onClick={triggerAutoGeneration}
-          className="w-full px-3 py-1.5 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600 rounded-lg text-gray-300 text-xs transition-colors"
+          className="w-full px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600 rounded-lg text-gray-300 text-sm transition-colors"
         >
-          🔧 Trigger Auto-Gen (Debug)
+          🔧 Trigger Auto-Generation (Debug)
         </button>
       </div>
     </div>
