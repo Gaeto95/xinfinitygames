@@ -68,14 +68,14 @@ export function HomePage() {
         throw new Error('Missing Supabase configuration');
       }
 
-      // Simulate generation stages with realistic delays
+      // Realistic generation stages with proper timing (total ~35 seconds)
       const stages = [
-        { id: 'thinking', delay: 3000 },
-        { id: 'idea', delay: 2500 },
-        { id: 'coding', delay: 4000 },
-        { id: 'art', delay: 3000 },
-        { id: 'magic', delay: 2000 },
-        { id: 'final', delay: 1500 }
+        { id: 'thinking', delay: 4000 },    // 4 seconds - AI thinking
+        { id: 'idea', delay: 6000 },        // 6 seconds - Generating concept
+        { id: 'art', delay: 8000 },         // 8 seconds - Creating thumbnail
+        { id: 'coding', delay: 12000 },     // 12 seconds - Writing game code
+        { id: 'magic', delay: 3000 },       // 3 seconds - Final processing
+        { id: 'final', delay: 2000 }        // 2 seconds - Saving to database
       ];
       
       // Show each stage with proper timing
@@ -184,8 +184,8 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Statistics Panel */}
-      <section className="pb-12 px-4">
+      {/* Statistics Panel - Moved here, right after hero section */}
+      <section className="pb-8 px-4">
         <div className="max-w-7xl mx-auto">
           <StatsPanel />
         </div>

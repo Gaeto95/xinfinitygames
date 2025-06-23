@@ -10,38 +10,44 @@ const stages = [
   { 
     id: 'thinking', 
     icon: Bot, 
-    title: 'AI is having an existential crisis...', 
-    subtitle: 'Contemplating the meaning of fun' 
+    title: 'AI is contemplating existence...', 
+    subtitle: 'Pondering the meaning of fun and chaos',
+    duration: 4
   },
   { 
     id: 'idea', 
     icon: Sparkles, 
-    title: 'Brainstorming ridiculous concepts...', 
-    subtitle: 'What if cats could code?' 
+    title: 'Brainstorming wild concepts...', 
+    subtitle: 'What if gravity worked sideways?',
+    duration: 6
+  },
+  { 
+    id: 'art', 
+    icon: Palette, 
+    title: 'Painting pixels with pure imagination...', 
+    subtitle: 'Teaching AI what "pretty chaos" looks like',
+    duration: 8
   },
   { 
     id: 'coding', 
     icon: Code, 
     title: 'Frantically typing with robot fingers...', 
-    subtitle: 'Debugging reality.exe' 
-  },
-  { 
-    id: 'art', 
-    icon: Palette, 
-    title: 'Drawing pixels with pure imagination...', 
-    subtitle: 'Teaching AI what "pretty" means' 
+    subtitle: 'Converting madness into playable reality',
+    duration: 12
   },
   { 
     id: 'magic', 
     icon: Zap, 
     title: 'Sprinkling digital fairy dust...', 
-    subtitle: 'Converting chaos into gameplay' 
+    subtitle: 'Adding the secret sauce of weirdness',
+    duration: 3
   },
   { 
     id: 'final', 
     icon: Gamepad2, 
     title: 'Birthing your new digital pet...', 
-    subtitle: 'It might bite, but lovingly' 
+    subtitle: 'Almost ready to cause delightful chaos',
+    duration: 2
   }
 ];
 
@@ -51,6 +57,11 @@ export function GenerationModal({ isOpen, stage }: GenerationModalProps) {
   const currentStage = stages.find(s => s.id === stage) || stages[0];
   const stageIndex = stages.findIndex(s => s.id === stage);
   const Icon = currentStage.icon;
+
+  // Calculate total duration up to current stage
+  const totalDuration = stages.reduce((sum, s) => sum + s.duration, 0);
+  const completedDuration = stages.slice(0, stageIndex).reduce((sum, s) => sum + s.duration, 0);
+  const progressPercentage = Math.min(((completedDuration + currentStage.duration * 0.5) / totalDuration) * 100, 95);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -89,27 +100,31 @@ export function GenerationModal({ isOpen, stage }: GenerationModalProps) {
           <div className="mb-6">
             <div className="flex justify-between text-xs text-gray-400 mb-2">
               <span>Progress</span>
-              <span>{Math.round(((stageIndex + 1) / stages.length) * 100)}%</span>
+              <span>{Math.round(progressPercentage)}%</span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${((stageIndex + 1) / stages.length) * 100}%` }}
-              />
+                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-1000 ease-out relative"
+                style={{ width: `${progressPercentage}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+              </div>
             </div>
           </div>
           
           {/* Stage indicators */}
-          <div className="flex justify-center space-x-2">
+          <div className="flex justify-center space-x-2 mb-6">
             {stages.map((s, index) => {
               const StageIcon = s.icon;
               return (
                 <div
                   key={s.id}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    index <= stageIndex
-                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
-                      : 'bg-gray-700 text-gray-400'
+                    index < stageIndex
+                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white scale-110'
+                      : index === stageIndex
+                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white scale-125 animate-pulse'
+                        : 'bg-gray-700 text-gray-400'
                   }`}
                 >
                   <StageIcon className="w-4 h-4" />
@@ -118,8 +133,16 @@ export function GenerationModal({ isOpen, stage }: GenerationModalProps) {
             })}
           </div>
           
+          {/* Time estimate */}
+          <div className="text-sm text-gray-400 mb-4">
+            <div className="flex items-center justify-center space-x-2">
+              <span>Estimated time:</span>
+              <span className="text-cyan-400 font-mono">~{totalDuration} seconds</span>
+            </div>
+          </div>
+          
           {/* Fun loading text */}
-          <div className="mt-6 text-sm text-gray-400">
+          <div className="text-sm text-gray-400">
             <div className="flex items-center justify-center space-x-1">
               <span>Please wait while we</span>
               <div className="flex space-x-1">
