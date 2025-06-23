@@ -127,7 +127,7 @@ export function HomePage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  Infinite Arcade
+                  xinfinitygames
                 </h1>
                 <p className="text-gray-400 text-sm">Autonomous Mini-Game Generator</p>
               </div>
@@ -155,7 +155,7 @@ export function HomePage() {
       </header>
 
       {/* Hero Section with Stats Panel */}
-      <section className="py-20 px-4 text-center relative overflow-hidden">
+      <section className="py-20 px-4 relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -166,7 +166,7 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Left side - Hero Content */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 text-center lg:text-left">
               <div className="inline-flex items-center space-x-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-gray-700/50">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span className="text-gray-200 text-sm font-medium">AI-Powered Game Creation</span>

@@ -1,8 +1,8 @@
-# 🎮 Infinite Arcade
+# 🎮 xinfinitygames
 
 **Autonomous Mini-Game Generator Powered by AI**
 
-Infinite Arcade is a revolutionary web application that autonomously generates unique, playable browser mini-games using advanced AI technology. Each game is weird, funny, or chaotic - designed to surprise and delight players with completely unexpected gaming experiences.
+xinfinitygames is a revolutionary web application that autonomously generates unique, playable browser mini-games using advanced AI technology. Each game is weird, funny, or chaotic - designed to surprise and delight players with completely unexpected gaming experiences.
 
 ## 🌟 Key Features
 
@@ -82,7 +82,7 @@ Infinite Arcade is a revolutionary web application that autonomously generates u
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd infinite-arcade
+   cd xinfinitygames
    ```
 
 2. **Install dependencies**
@@ -266,7 +266,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🏆 Innovation Highlights
 
-Infinite Arcade represents a breakthrough in autonomous content generation, demonstrating:
+xinfinitygames represents a breakthrough in autonomous content generation, demonstrating:
 
 - **Technical Excellence**: Seamless integration of AI, real-time databases, and modern web technologies
 - **User Experience**: Professional-grade interface with immersive audio and smooth animations
@@ -289,4 +289,4 @@ Infinite Arcade represents a breakthrough in autonomous content generation, demo
 
 ---
 
-**Experience the future of gaming at Infinite Arcade - where every click creates something completely new, and the community decides what stays.**
+**Experience the future of gaming at xinfinitygames - where every click creates something completely new, and the community decides what stays.**
