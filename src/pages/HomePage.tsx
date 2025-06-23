@@ -5,6 +5,7 @@ import { GameCard } from '../components/GameCard';
 import { GameModal } from '../components/GameModal';
 import { GenerationModal } from '../components/GenerationModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { StatsPanel } from '../components/StatsPanel';
 
 export function HomePage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -180,6 +181,13 @@ export function HomePage() {
             Experience weird, funny, and chaotic browser mini-games generated completely by AI. 
             Each game is unique, unexpected, and ready to play instantly.
           </p>
+        </div>
+      </section>
+
+      {/* Statistics Panel */}
+      <section className="pb-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <StatsPanel />
         </div>
       </section>
 
