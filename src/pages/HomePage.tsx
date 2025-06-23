@@ -64,8 +64,14 @@ export function HomePage() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
+      console.log('Environment check:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing'
+      });
+      
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Missing Supabase configuration');
+        throw new Error('Missing Supabase configuration. Please check your .env file contains VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
       }
 
       // Realistic generation stages with proper timing (total ~35 seconds)
@@ -86,30 +92,71 @@ export function HomePage() {
         }
       }
 
-      console.log('Calling edge function...');
-      const response = await fetch(`${supabaseUrl}/functions/v1/generate-game`, {
+      const functionUrl = `${supabaseUrl}/functions/v1/generate-game`;
+      console.log('Calling edge function at:', functionUrl);
+      
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json',
         },
+        // Add timeout to prevent hanging
+        signal: AbortSignal.timeout(120000) // 2 minutes timeout
       });
 
-      console.log('Response status:', response.status);
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Edge function error response:', errorText);
+        
+        // Provide more specific error messages
+        if (response.status === 404) {
+          throw new Error('Edge function not found. Please ensure the generate-game function is deployed to Supabase.');
+        } else if (response.status === 500) {
+          throw new Error(`Server error: ${errorText}. Check the edge function logs in your Supabase dashboard.`);
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error('Authentication error. Please check your Supabase keys and permissions.');
+        } else {
+          throw new Error(`Failed to generate game (${response.status}): ${errorText}`);
+        }
+      }
+
       const responseText = await response.text();
       console.log('Response text:', responseText);
 
-      if (!response.ok) {
-        throw new Error(`Failed to generate game: ${responseText}`);
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error(`Invalid response format from edge function: ${responseText.substring(0, 200)}...`);
       }
 
-      const result = JSON.parse(responseText);
       console.log('Generated game:', result);
       
       await fetchGames();
     } catch (error) {
       console.error('Error generating game:', error);
-      alert(`Error generating game: ${error.message}`);
+      
+      // Provide user-friendly error messages
+      let userMessage = 'Error generating game: ';
+      
+      if (error.name === 'AbortError') {
+        userMessage += 'Request timed out. The AI might be busy - please try again.';
+      } else if (error.message.includes('Failed to fetch')) {
+        userMessage += 'Network error. Please check your internet connection and Supabase configuration.';
+      } else {
+        userMessage += error.message;
+      }
+      
+      alert(userMessage);
     } finally {
       setGenerating(false);
     }
