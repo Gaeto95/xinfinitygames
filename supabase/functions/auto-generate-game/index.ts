@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     })
     
     if (!statsResponse.ok) {
+      console.error('Failed to fetch generation stats:', await statsResponse.text())
       throw new Error('Failed to fetch generation stats')
     }
     
@@ -30,21 +31,29 @@ Deno.serve(async (req) => {
     const stats = statsData[0]
     
     if (!stats) {
+      console.error('No generation stats found in database')
       throw new Error('No generation stats found')
     }
     
     const now = new Date()
     const nextGeneration = new Date(stats.next_auto_generation)
     
-    console.log('Current time:', now.toISOString())
-    console.log('Next scheduled generation:', nextGeneration.toISOString())
+    console.log('Time check:', {
+      currentTime: now.toISOString(),
+      nextScheduled: nextGeneration.toISOString(),
+      shouldGenerate: now >= nextGeneration
+    })
     
     if (now < nextGeneration) {
+      const timeRemaining = Math.ceil((nextGeneration.getTime() - now.getTime()) / 1000)
+      console.log(`Not time for auto-generation yet. ${timeRemaining} seconds remaining.`)
+      
       return new Response(
         JSON.stringify({ 
           message: 'Not time for auto-generation yet',
           nextGeneration: nextGeneration.toISOString(),
-          timeRemaining: Math.ceil((nextGeneration.getTime() - now.getTime()) / 1000)
+          timeRemaining: timeRemaining,
+          currentTime: now.toISOString()
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -53,38 +62,57 @@ Deno.serve(async (req) => {
       )
     }
     
-    // Call the main generate-game function
-    console.log('Calling main generation function...')
+    console.log('Time for auto-generation! Calling main generation function...')
+    
+    // Call the main generate-game function with auto-generation flag
     const generateResponse = await fetch(`${supabaseUrl}/functions/v1/generate-game`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ auto_generated: true })
+      body: JSON.stringify({ 
+        auto_generated: true,
+        user_prompt: '' // Empty prompt for random generation
+      })
     })
     
     if (!generateResponse.ok) {
       const errorText = await generateResponse.text()
+      console.error('Game generation failed:', errorText)
       throw new Error(`Game generation failed: ${errorText}`)
     }
     
     const gameResult = await generateResponse.json()
-    console.log('Auto-generated game:', gameResult.title)
+    console.log('Auto-generated game successfully:', {
+      title: gameResult.title,
+      success: gameResult.success
+    })
     
-    // Update statistics for auto-generation
-    const updateStatsResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/update_generation_stats`, {
-      method: 'POST',
+    // Update the next generation time (3 hours from now)
+    const nextAutoGeneration = new Date(Date.now() + 3 * 60 * 60 * 1000) // 3 hours
+    
+    console.log('Updating generation stats...')
+    const updateStatsResponse = await fetch(`${supabaseUrl}/rest/v1/generation_stats?id=eq.${stats.id}`, {
+      method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
         'apikey': supabaseKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ is_auto_generation: true })
+      body: JSON.stringify({
+        last_auto_generation: now.toISOString(),
+        next_auto_generation: nextAutoGeneration.toISOString(),
+        updated_at: now.toISOString()
+      })
     })
     
     if (!updateStatsResponse.ok) {
-      console.error('Failed to update stats, but game was generated successfully')
+      const updateError = await updateStatsResponse.text()
+      console.error('Failed to update stats:', updateError)
+      // Don't throw here - game was generated successfully
+    } else {
+      console.log('Generation stats updated successfully')
     }
     
     return new Response(
@@ -92,7 +120,8 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Auto-generated game successfully',
         game: gameResult,
-        nextGeneration: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() // 3 hours from now
+        nextGeneration: nextAutoGeneration.toISOString(),
+        currentTime: now.toISOString()
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -102,8 +131,36 @@ Deno.serve(async (req) => {
     
   } catch (error) {
     console.error('Auto-generation error:', error)
+    
+    // Try to update next generation time even if generation failed
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const nextAutoGeneration = new Date(Date.now() + 30 * 60 * 1000) // Retry in 30 minutes on error
+      
+      await fetch(`${supabaseUrl}/rest/v1/generation_stats`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          next_auto_generation: nextAutoGeneration.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+      })
+      
+      console.log('Set retry time for 30 minutes due to error')
+    } catch (retryError) {
+      console.error('Failed to set retry time:', retryError)
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        retryIn: '30 minutes'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
