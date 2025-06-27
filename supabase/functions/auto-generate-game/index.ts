@@ -14,6 +14,29 @@ Deno.serve(async (req) => {
     
     console.log('Auto-generation triggered at:', new Date().toISOString())
     
+    // PROACTIVELY update next generation time FIRST to prevent hanging
+    const nextAutoGeneration = new Date(Date.now() + 3 * 60 * 60 * 1000) // 3 hours from now
+    
+    console.log('Proactively updating next generation time to prevent hanging...')
+    const proactiveUpdateResponse = await fetch(`${supabaseUrl}/rest/v1/generation_stats`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        next_auto_generation: nextAutoGeneration.toISOString(),
+        updated_at: new Date().toISOString()
+      })
+    })
+    
+    if (!proactiveUpdateResponse.ok) {
+      console.error('Failed to proactively update generation time:', await proactiveUpdateResponse.text())
+    } else {
+      console.log('Successfully updated next generation time to:', nextAutoGeneration.toISOString())
+    }
+    
     // Check if it's time for auto-generation
     const statsResponse = await fetch(`${supabaseUrl}/rest/v1/generation_stats?select=*&limit=1`, {
       headers: {
@@ -89,11 +112,9 @@ Deno.serve(async (req) => {
       success: gameResult.success
     })
     
-    // Update the next generation time (3 hours from now)
-    const nextAutoGeneration = new Date(Date.now() + 3 * 60 * 60 * 1000) // 3 hours
-    
-    console.log('Updating generation stats...')
-    const updateStatsResponse = await fetch(`${supabaseUrl}/rest/v1/generation_stats?id=eq.${stats.id}`, {
+    // Update the last generation time and confirm next generation time
+    console.log('Updating generation stats with completion time...')
+    const finalUpdateResponse = await fetch(`${supabaseUrl}/rest/v1/generation_stats?id=eq.${stats.id}`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
@@ -102,14 +123,14 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         last_auto_generation: now.toISOString(),
-        next_auto_generation: nextAutoGeneration.toISOString(),
+        next_auto_generation: nextAutoGeneration.toISOString(), // Confirm the time we set earlier
         updated_at: now.toISOString()
       })
     })
     
-    if (!updateStatsResponse.ok) {
-      const updateError = await updateStatsResponse.text()
-      console.error('Failed to update stats:', updateError)
+    if (!finalUpdateResponse.ok) {
+      const updateError = await finalUpdateResponse.text()
+      console.error('Failed to update final stats:', updateError)
       // Don't throw here - game was generated successfully
     } else {
       console.log('Generation stats updated successfully')
@@ -132,12 +153,13 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Auto-generation error:', error)
     
-    // Try to update next generation time even if generation failed
+    // Try to set retry time even if generation failed (30 minutes for quicker retry)
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      const nextAutoGeneration = new Date(Date.now() + 30 * 60 * 1000) // Retry in 30 minutes on error
+      const retryTime = new Date(Date.now() + 30 * 60 * 1000) // Retry in 30 minutes on error
       
+      console.log('Setting retry time for 30 minutes due to error...')
       await fetch(`${supabaseUrl}/rest/v1/generation_stats`, {
         method: 'PATCH',
         headers: {
@@ -146,7 +168,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          next_auto_generation: nextAutoGeneration.toISOString(),
+          next_auto_generation: retryTime.toISOString(),
           updated_at: new Date().toISOString()
         })
       })

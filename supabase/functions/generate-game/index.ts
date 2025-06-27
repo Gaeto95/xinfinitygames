@@ -654,6 +654,942 @@ function resetGame() {
 </html>`;
 }
 
+function createPuzzleThemeGame(title: string, description: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); 
+  font-family: Arial, sans-serif; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  border: 2px solid #9B59B6;
+}
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  gap: 5px;
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+}
+.puzzle-tile {
+  width: 80px;
+  height: 80px;
+  background: #9B59B6;
+  border: 2px solid white;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+.puzzle-tile:hover { transform: scale(1.1); }
+.puzzle-tile.matched { background: #2ECC71; }
+.hud { font-size: 18px; margin: 15px 0; color: #9B59B6; }
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #9B59B6, #E74C3C);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #9B59B6; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>${title}</h1>
+  <p style="margin-bottom: 15px;">${description}</p>
+  <div class="hud">Score: <span id="score">0</span> | Moves: <span id="moves">0</span></div>
+  <div class="puzzle-grid" id="grid"></div>
+  <button onclick="startGame()">New Puzzle</button>
+</div>
+
+<script>
+let game = {
+  grid: [],
+  score: 0,
+  moves: 0,
+  symbols: ['🌟', '🎯', '🔥', '💎', '⚡', '🌈', '🎪', '🎨']
+};
+
+function startGame() {
+  game.score = 0;
+  game.moves = 0;
+  generatePuzzle();
+  updateDisplay();
+}
+
+function generatePuzzle() {
+  const gridElement = document.getElementById('grid');
+  gridElement.innerHTML = '';
+  game.grid = [];
+  
+  // Create pairs of symbols
+  const symbols = [];
+  for (let i = 0; i < 8; i++) {
+    symbols.push(game.symbols[i], game.symbols[i]);
+  }
+  
+  // Shuffle
+  for (let i = symbols.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [symbols[i], symbols[j]] = [symbols[j], symbols[i]];
+  }
+  
+  // Create tiles
+  symbols.forEach((symbol, index) => {
+    const tile = document.createElement('div');
+    tile.className = 'puzzle-tile';
+    tile.textContent = '?';
+    tile.dataset.symbol = symbol;
+    tile.dataset.index = index;
+    tile.onclick = () => flipTile(tile);
+    gridElement.appendChild(tile);
+    game.grid.push({ element: tile, symbol: symbol, flipped: false, matched: false });
+  });
+}
+
+let flippedTiles = [];
+
+function flipTile(tile) {
+  if (flippedTiles.length >= 2 || tile.classList.contains('matched')) return;
+  
+  const index = parseInt(tile.dataset.index);
+  const gridItem = game.grid[index];
+  
+  if (gridItem.flipped) return;
+  
+  tile.textContent = gridItem.symbol;
+  gridItem.flipped = true;
+  flippedTiles.push(gridItem);
+  
+  if (flippedTiles.length === 2) {
+    game.moves++;
+    setTimeout(checkMatch, 1000);
+  }
+  
+  updateDisplay();
+}
+
+function checkMatch() {
+  if (flippedTiles[0].symbol === flippedTiles[1].symbol) {
+    // Match!
+    flippedTiles.forEach(item => {
+      item.matched = true;
+      item.element.classList.add('matched');
+    });
+    game.score += 10;
+    
+    // Check win
+    if (game.grid.every(item => item.matched)) {
+      setTimeout(() => alert('Puzzle Complete! Score: ' + game.score), 500);
+    }
+  } else {
+    // No match
+    flippedTiles.forEach(item => {
+      item.flipped = false;
+      item.element.textContent = '?';
+    });
+  }
+  
+  flippedTiles = [];
+  updateDisplay();
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('moves').textContent = game.moves;
+}
+
+startGame();
+</script>
+</body>
+</html>`;
+}
+
+function createRunnerThemeGame(title: string, description: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(180deg, #FF6B6B 0%, #4ECDC4 100%); 
+  font-family: Arial, sans-serif; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #FF6B6B;
+}
+#gameCanvas { 
+  border: 3px solid #FF6B6B;
+  border-radius: 15px;
+  background: linear-gradient(180deg, #87CEEB 0%, #228B22 100%);
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #FF6B6B;
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #FF6B6B; margin-bottom: 10px; }
+.controls { font-size: 14px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>${title}</h1>
+  <p style="margin-bottom: 15px;">${description}</p>
+  <div class="hud">
+    <div>Distance: <span id="distance">0</span>m</div>
+    <div>Speed: <span id="speed">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="controls">SPACEBAR to jump • Avoid obstacles • Keep running!</div>
+  <button onclick="startGame()" id="startBtn">Start Running</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let game = {
+  player: { x: 100, y: 400, width: 30, height: 40, vy: 0, onGround: true },
+  obstacles: [],
+  particles: [],
+  distance: 0,
+  speed: 5,
+  running: false,
+  keys: {}
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && game.player.onGround && game.running) {
+    game.player.vy = -15;
+    game.player.onGround = false;
+  }
+});
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  game.distance = 0;
+  game.speed = 5;
+  game.obstacles = [];
+  game.particles = [];
+  document.getElementById('startBtn').textContent = 'Running...';
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  // Gravity
+  if (!game.player.onGround) {
+    game.player.vy += 0.8;
+    game.player.y += game.player.vy;
+    
+    // Ground collision
+    if (game.player.y >= 400) {
+      game.player.y = 400;
+      game.player.vy = 0;
+      game.player.onGround = true;
+    }
+  }
+  
+  // Update obstacles
+  game.obstacles.forEach((obs, i) => {
+    obs.x -= game.speed;
+    
+    if (obs.x + obs.width < 0) {
+      game.obstacles.splice(i, 1);
+      game.distance += 10;
+    }
+    
+    // Collision
+    if (isColliding(game.player, obs)) {
+      endGame();
+    }
+  });
+  
+  // Spawn obstacles
+  if (Math.random() < 0.01) {
+    game.obstacles.push({
+      x: canvas.width,
+      y: 420,
+      width: 30,
+      height: 60,
+      color: '#8B4513'
+    });
+  }
+  
+  // Update particles
+  game.particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 16;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  });
+  
+  // Increase speed over time
+  game.speed += 0.001;
+  
+  updateDisplay();
+}
+
+function render() {
+  // Sky gradient
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#87CEEB');
+  gradient.addColorStop(1, '#98FB98');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Ground
+  ctx.fillStyle = '#228B22';
+  ctx.fillRect(0, 440, canvas.width, 160);
+  
+  // Player
+  ctx.fillStyle = '#FF6B6B';
+  ctx.fillRect(game.player.x, game.player.y, game.player.width, game.player.height);
+  
+  // Player details
+  ctx.fillStyle = '#FFF';
+  ctx.fillRect(game.player.x + 5, game.player.y + 5, 8, 8);
+  ctx.fillRect(game.player.x + 17, game.player.y + 5, 8, 8);
+  
+  // Obstacles
+  game.obstacles.forEach(obs => {
+    ctx.fillStyle = obs.color;
+    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+  });
+  
+  // Particles
+  game.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / 1000;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function isColliding(a, b) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function updateDisplay() {
+  document.getElementById('distance').textContent = Math.floor(game.distance);
+  document.getElementById('speed').textContent = Math.floor(game.speed);
+}
+
+function endGame() {
+  game.running = false;
+  alert('Game Over! Distance: ' + Math.floor(game.distance) + 'm');
+  document.getElementById('startBtn').textContent = 'Start Running';
+}
+</script>
+</body>
+</html>`;
+}
+
+function createShooterThemeGame(title: string, description: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); 
+  font-family: 'Courier New', monospace; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.4);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #E74C3C;
+}
+#gameCanvas { 
+  border: 3px solid #E74C3C;
+  border-radius: 15px;
+  background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%);
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #E74C3C;
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #E74C3C, #F39C12);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #E74C3C; margin-bottom: 10px; }
+.controls { font-size: 14px; margin: 10px 0; opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>${title}</h1>
+  <p style="margin-bottom: 15px;">${description}</p>
+  
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Ammo: <span id="ammo">∞</span></div>
+  </div>
+  
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  
+  <div class="controls">ARROW KEYS to move • SPACEBAR to shoot • Defend yourself!</div>
+  
+  <button onclick="startGame()" id="startBtn">Start Battle</button>
+  <button onclick="resetGame()">Reset</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let game = {
+  player: { x: 400, y: 500, width: 30, height: 30 },
+  bullets: [],
+  enemies: [],
+  particles: [],
+  score: 0,
+  running: false,
+  keys: {},
+  lastShot: 0
+};
+
+document.addEventListener('keydown', (e) => game.keys[e.code] = true);
+document.addEventListener('keyup', (e) => game.keys[e.code] = false);
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  document.getElementById('startBtn').textContent = 'Battle Active';
+  spawnEnemies();
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  const now = Date.now();
+  
+  // Player movement
+  if (game.keys['ArrowLeft'] && game.player.x > 0) game.player.x -= 5;
+  if (game.keys['ArrowRight'] && game.player.x < canvas.width - game.player.width) game.player.x += 5;
+  if (game.keys['ArrowUp'] && game.player.y > 0) game.player.y -= 5;
+  if (game.keys['ArrowDown'] && game.player.y < canvas.height - game.player.height) game.player.y += 5;
+  
+  // Shooting
+  if (game.keys['Space'] && now - game.lastShot > 200) {
+    game.bullets.push({
+      x: game.player.x + game.player.width/2,
+      y: game.player.y,
+      width: 4,
+      height: 10,
+      speed: 8
+    });
+    game.lastShot = now;
+  }
+  
+  // Update bullets
+  game.bullets.forEach((bullet, i) => {
+    bullet.y -= bullet.speed;
+    
+    if (bullet.y < 0) {
+      game.bullets.splice(i, 1);
+    }
+    
+    // Check enemy collisions
+    game.enemies.forEach((enemy, j) => {
+      if (isColliding(bullet, enemy)) {
+        game.score += 10;
+        createExplosion(enemy.x, enemy.y);
+        game.enemies.splice(j, 1);
+        game.bullets.splice(i, 1);
+      }
+    });
+  });
+  
+  // Update enemies
+  game.enemies.forEach((enemy, i) => {
+    enemy.y += enemy.speed;
+    
+    if (enemy.y > canvas.height) {
+      game.enemies.splice(i, 1);
+    }
+    
+    // Check player collision
+    if (isColliding(game.player, enemy)) {
+      endGame();
+    }
+  });
+  
+  // Update particles
+  game.particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 16;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  });
+  
+  // Spawn enemies
+  if (Math.random() < 0.02) {
+    game.enemies.push({
+      x: Math.random() * (canvas.width - 30),
+      y: -30,
+      width: 30,
+      height: 30,
+      speed: 2 + Math.random() * 3
+    });
+  }
+  
+  updateDisplay();
+}
+
+function render() {
+  // Space background
+  const gradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
+  gradient.addColorStop(0, '#1a1a2e');
+  gradient.addColorStop(1, '#16213e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Stars
+  for (let i = 0; i < 50; i++) {
+    const x = (i * 137.5) % canvas.width;
+    const y = (i * 73.3) % canvas.height;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(x, y, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Player
+  ctx.fillStyle = '#E74C3C';
+  ctx.fillRect(game.player.x, game.player.y, game.player.width, game.player.height);
+  ctx.fillStyle = '#F39C12';
+  ctx.fillRect(game.player.x + 10, game.player.y - 5, 10, 5);
+  
+  // Bullets
+  game.bullets.forEach(bullet => {
+    ctx.fillStyle = '#FFFF00';
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+  
+  // Enemies
+  game.enemies.forEach(enemy => {
+    ctx.fillStyle = '#8E44AD';
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    ctx.fillStyle = '#E74C3C';
+    ctx.fillRect(enemy.x + 5, enemy.y + 5, 20, 20);
+  });
+  
+  // Particles
+  game.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / 1000;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function spawnEnemies() {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      game.enemies.push({
+        x: Math.random() * (canvas.width - 30),
+        y: -30,
+        width: 30,
+        height: 30,
+        speed: 2 + Math.random() * 3
+      });
+    }, i * 1000);
+  }
+}
+
+function createExplosion(x, y) {
+  for (let i = 0; i < 8; i++) {
+    game.particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      color: ['#FF4444', '#FFAA00', '#FFFF00'][Math.floor(Math.random() * 3)],
+      size: Math.random() * 4 + 2,
+      life: 1000
+    });
+  }
+}
+
+function isColliding(a, b) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+}
+
+function endGame() {
+  game.running = false;
+  alert('Game Over! Final Score: ' + game.score);
+  document.getElementById('startBtn').textContent = 'Start Battle';
+}
+
+function resetGame() {
+  game.running = false;
+  game.bullets = [];
+  game.enemies = [];
+  game.particles = [];
+  game.score = 0;
+  updateDisplay();
+  document.getElementById('startBtn').textContent = 'Start Battle';
+  
+  const gradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
+  gradient.addColorStop(0, '#1a1a2e');
+  gradient.addColorStop(1, '#16213e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+</script>
+</body>
+</html>`;
+}
+
+function createGenericThemeGame(title: string, description: string): string {
+  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+  const primaryColor = colors[Math.floor(Math.random() * colors.length)];
+  const secondaryColor = colors[Math.floor(Math.random() * colors.length)];
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%); 
+  font-family: Arial, sans-serif; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  border: 2px solid ${primaryColor};
+}
+#gameCanvas { 
+  border: 3px solid ${primaryColor};
+  border-radius: 15px;
+  background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%);
+  cursor: pointer;
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: ${primaryColor};
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, ${primaryColor}, ${secondaryColor});
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: ${primaryColor}; margin-bottom: 10px; }
+.controls { font-size: 14px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>${title}</h1>
+  <p style="margin-bottom: 15px;">${description}</p>
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Time: <span id="time">60</span>s</div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="controls">CLICK to interact • Collect points • Have fun!</div>
+  <button onclick="startGame()" id="startBtn">Start Game</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let game = {
+  objects: [],
+  particles: [],
+  score: 0,
+  timeLeft: 60,
+  running: false
+};
+
+canvas.addEventListener('click', (e) => {
+  if (!game.running) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  game.objects.forEach((obj, i) => {
+    const dx = x - obj.x;
+    const dy = y - obj.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance < obj.size) {
+      game.score += obj.points;
+      createEffect(obj.x, obj.y, obj.color);
+      game.objects.splice(i, 1);
+    }
+  });
+});
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  game.score = 0;
+  game.timeLeft = 60;
+  game.objects = [];
+  game.particles = [];
+  document.getElementById('startBtn').textContent = 'Playing...';
+  
+  // Start timer
+  const timer = setInterval(() => {
+    game.timeLeft--;
+    if (game.timeLeft <= 0) {
+      clearInterval(timer);
+      endGame();
+    }
+    updateDisplay();
+  }, 1000);
+  
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  // Update objects
+  game.objects.forEach((obj, i) => {
+    obj.y += obj.speed;
+    obj.rotation += 0.05;
+    obj.pulse += 0.1;
+    
+    if (obj.y > canvas.height + obj.size) {
+      game.objects.splice(i, 1);
+    }
+  });
+  
+  // Update particles
+  game.particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 16;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  });
+  
+  // Spawn objects
+  if (Math.random() < 0.03) {
+    const colors = ['${primaryColor}', '${secondaryColor}', '#FFD700', '#FF6B6B', '#4ECDC4'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 20 + Math.random() * 30;
+    
+    game.objects.push({
+      x: Math.random() * (canvas.width - size * 2) + size,
+      y: -size,
+      size: size,
+      speed: 1 + Math.random() * 3,
+      color: color,
+      points: Math.floor(50 / size * 10),
+      rotation: 0,
+      pulse: 0
+    });
+  }
+  
+  updateDisplay();
+}
+
+function render() {
+  // Background
+  const gradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
+  gradient.addColorStop(0, '#1a1a2e');
+  gradient.addColorStop(1, '#16213e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Objects
+  game.objects.forEach(obj => {
+    const pulseFactor = 1 + Math.sin(obj.pulse) * 0.1;
+    
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.rotate(obj.rotation);
+    ctx.scale(pulseFactor, pulseFactor);
+    
+    // Glow effect
+    const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, obj.size + 10);
+    glowGradient.addColorStop(0, obj.color + '80');
+    glowGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, obj.size + 10, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Main object
+    ctx.fillStyle = obj.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, obj.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(-obj.size/3, -obj.size/3, obj.size/3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+  
+  // Particles
+  game.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / 1000;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function createEffect(x, y, color) {
+  for (let i = 0; i < 8; i++) {
+    game.particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      color: color,
+      size: Math.random() * 4 + 2,
+      life: 1000
+    });
+  }
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('time').textContent = game.timeLeft;
+}
+
+function endGame() {
+  game.running = false;
+  alert('Game Over! Final Score: ' + game.score);
+  document.getElementById('startBtn').textContent = 'Start Game';
+}
+</script>
+</body>
+</html>`;
+}
+
 function createBubblePopperGame(): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -703,12 +1639,13 @@ button {
   font-size: 16px;
   margin: 5px;
 }
+h1 { color: #FF6B6B; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 <div class="game-container">
   <h1>Cosmic Bubble Popper</h1>
-  <p>Pop colorful space bubbles before they reach Earth</p>
+  <p style="margin-bottom: 15px;">Pop colorful space bubbles before they reach Earth</p>
   <div class="hud">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
@@ -903,41 +1840,1122 @@ function endGame() {
 </html>`;
 }
 
-// Add other themed fallback games...
-function createPuzzleThemeGame(title: string, description: string): string {
-  // Similar structure but puzzle-themed
-  return createBubblePopperGame(); // Simplified for now
-}
-
-function createRunnerThemeGame(title: string, description: string): string {
-  // Similar structure but runner-themed
-  return createBubblePopperGame(); // Simplified for now
-}
-
-function createShooterThemeGame(title: string, description: string): string {
-  // Similar structure but shooter-themed
-  return createBubblePopperGame(); // Simplified for now
-}
-
-function createGenericThemeGame(title: string, description: string): string {
-  // Generic but still themed to match title/description
-  return createBubblePopperGame(); // Simplified for now
-}
-
 function createNeonSnakeGame(): string {
-  return createBubblePopperGame(); // Simplified for now
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Snake Runner</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(45deg, #0f0f23 0%, #1a1a2e 100%); 
+  font-family: 'Courier New', monospace; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.4);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #00FFFF;
+}
+#gameCanvas { 
+  border: 3px solid #00FFFF;
+  border-radius: 15px;
+  background: #000;
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #00FFFF;
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #00FFFF, #FF00FF);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #00FFFF; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>Neon Snake Runner</h1>
+  <p style="margin-bottom: 15px;">Guide a glowing snake through a cyberpunk maze</p>
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Length: <span id="length">1</span></div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div style="font-size: 14px; margin: 10px 0;">ARROW KEYS to move • Collect orbs • Avoid walls!</div>
+  <button onclick="startGame()" id="startBtn">Start Slithering</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const GRID_SIZE = 20;
+const GRID_WIDTH = canvas.width / GRID_SIZE;
+const GRID_HEIGHT = canvas.height / GRID_SIZE;
+
+let game = {
+  snake: [{ x: 10, y: 10 }],
+  direction: { x: 1, y: 0 },
+  food: { x: 15, y: 15 },
+  score: 0,
+  running: false,
+  keys: {}
+};
+
+document.addEventListener('keydown', (e) => {
+  if (!game.running) return;
+  
+  switch(e.code) {
+    case 'ArrowUp':
+      if (game.direction.y === 0) game.direction = { x: 0, y: -1 };
+      break;
+    case 'ArrowDown':
+      if (game.direction.y === 0) game.direction = { x: 0, y: 1 };
+      break;
+    case 'ArrowLeft':
+      if (game.direction.x === 0) game.direction = { x: -1, y: 0 };
+      break;
+    case 'ArrowRight':
+      if (game.direction.x === 0) game.direction = { x: 1, y: 0 };
+      break;
+  }
+});
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  game.snake = [{ x: 10, y: 10 }];
+  game.direction = { x: 1, y: 0 };
+  game.score = 0;
+  spawnFood();
+  document.getElementById('startBtn').textContent = 'Slithering...';
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  
+  setTimeout(() => {
+    update();
+    render();
+    gameLoop();
+  }, 150);
+}
+
+function update() {
+  // Move snake
+  const head = { ...game.snake[0] };
+  head.x += game.direction.x;
+  head.y += game.direction.y;
+  
+  // Check wall collision
+  if (head.x < 0 || head.x >= GRID_WIDTH || head.y < 0 || head.y >= GRID_HEIGHT) {
+    endGame();
+    return;
+  }
+  
+  // Check self collision
+  if (game.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+    endGame();
+    return;
+  }
+  
+  game.snake.unshift(head);
+  
+  // Check food collision
+  if (head.x === game.food.x && head.y === game.food.y) {
+    game.score += 10;
+    spawnFood();
+  } else {
+    game.snake.pop();
+  }
+  
+  updateDisplay();
+}
+
+function render() {
+  // Clear canvas
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw grid
+  ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= GRID_WIDTH; x++) {
+    ctx.beginPath();
+    ctx.moveTo(x * GRID_SIZE, 0);
+    ctx.lineTo(x * GRID_SIZE, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= GRID_HEIGHT; y++) {
+    ctx.beginPath();
+    ctx.moveTo(0, y * GRID_SIZE);
+    ctx.lineTo(canvas.width, y * GRID_SIZE);
+    ctx.stroke();
+  }
+  
+  // Draw snake
+  game.snake.forEach((segment, index) => {
+    const x = segment.x * GRID_SIZE;
+    const y = segment.y * GRID_SIZE;
+    
+    // Glow effect
+    ctx.shadowColor = '#00FFFF';
+    ctx.shadowBlur = 20;
+    
+    if (index === 0) {
+      // Head
+      ctx.fillStyle = '#00FFFF';
+    } else {
+      // Body
+      const alpha = 1 - (index / game.snake.length) * 0.5;
+      ctx.fillStyle = 'rgba(0, 255, 255, ' + alpha + ')';
+    }
+    
+    ctx.fillRect(x + 2, y + 2, GRID_SIZE - 4, GRID_SIZE - 4);
+    
+    ctx.shadowBlur = 0;
+  });
+  
+  // Draw food
+  const fx = game.food.x * GRID_SIZE;
+  const fy = game.food.y * GRID_SIZE;
+  
+  ctx.shadowColor = '#FF00FF';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#FF00FF';
+  ctx.beginPath();
+  ctx.arc(fx + GRID_SIZE/2, fy + GRID_SIZE/2, GRID_SIZE/2 - 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function spawnFood() {
+  do {
+    game.food = {
+      x: Math.floor(Math.random() * GRID_WIDTH),
+      y: Math.floor(Math.random() * GRID_HEIGHT)
+    };
+  } while (game.snake.some(segment => segment.x === game.food.x && segment.y === game.food.y));
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('length').textContent = game.snake.length;
+}
+
+function endGame() {
+  game.running = false;
+  alert('Game Over! Final Score: ' + game.score);
+  document.getElementById('startBtn').textContent = 'Start Slithering';
+}
+</script>
+</body>
+</html>`;
 }
 
 function createGravityFlipperGame(): string {
-  return createBubblePopperGame(); // Simplified for now
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gravity Flipper</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%); 
+  font-family: Arial, sans-serif; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #9B59B6;
+}
+#gameCanvas { 
+  border: 3px solid #9B59B6;
+  border-radius: 15px;
+  background: linear-gradient(180deg, #34495E 0%, #2C3E50 100%);
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #9B59B6;
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #9B59B6, #3498DB);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #9B59B6; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>Gravity Flipper</h1>
+  <p style="margin-bottom: 15px;">Flip gravity to navigate through floating platforms</p>
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Flips: <span id="flips">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div style="font-size: 14px; margin: 10px 0;">SPACEBAR to flip gravity • Collect stars • Avoid spikes!</div>
+  <button onclick="startGame()" id="startBtn">Start Flipping</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let game = {
+  player: { x: 100, y: 300, width: 20, height: 20, vy: 0 },
+  platforms: [],
+  stars: [],
+  spikes: [],
+  particles: [],
+  gravity: 0.5,
+  gravityDirection: 1, // 1 = down, -1 = up
+  score: 0,
+  flips: 0,
+  running: false,
+  scrollX: 0
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && game.running) {
+    e.preventDefault();
+    game.gravityDirection *= -1;
+    game.flips++;
+    createFlipEffect();
+  }
+});
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  game.score = 0;
+  game.flips = 0;
+  game.scrollX = 0;
+  game.gravityDirection = 1;
+  game.player = { x: 100, y: 300, width: 20, height: 20, vy: 0 };
+  generateLevel();
+  document.getElementById('startBtn').textContent = 'Flipping...';
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  // Apply gravity
+  game.player.vy += game.gravity * game.gravityDirection;
+  game.player.y += game.player.vy;
+  
+  // Move player forward
+  game.scrollX += 2;
+  
+  // Platform collisions
+  game.platforms.forEach(platform => {
+    if (game.player.x < platform.x + platform.width &&
+        game.player.x + game.player.width > platform.x &&
+        game.player.y < platform.y + platform.height &&
+        game.player.y + game.player.height > platform.y) {
+      
+      if (game.gravityDirection > 0 && game.player.vy > 0) {
+        // Falling down, land on top
+        game.player.y = platform.y - game.player.height;
+        game.player.vy = 0;
+      } else if (game.gravityDirection < 0 && game.player.vy < 0) {
+        // Falling up, land on bottom
+        game.player.y = platform.y + platform.height;
+        game.player.vy = 0;
+      }
+    }
+  });
+  
+  // Star collection
+  game.stars.forEach((star, i) => {
+    if (isColliding(game.player, star)) {
+      game.score += 10;
+      createStarEffect(star.x, star.y);
+      game.stars.splice(i, 1);
+    }
+  });
+  
+  // Spike collision
+  game.spikes.forEach(spike => {
+    if (isColliding(game.player, spike)) {
+      endGame();
+    }
+  });
+  
+  // Update particles
+  game.particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 16;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  });
+  
+  // Boundary check
+  if (game.player.y < -50 || game.player.y > canvas.height + 50) {
+    endGame();
+  }
+  
+  updateDisplay();
+}
+
+function render() {
+  // Background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  if (game.gravityDirection > 0) {
+    gradient.addColorStop(0, '#34495E');
+    gradient.addColorStop(1, '#2C3E50');
+  } else {
+    gradient.addColorStop(0, '#2C3E50');
+    gradient.addColorStop(1, '#34495E');
+  }
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.save();
+  ctx.translate(-game.scrollX, 0);
+  
+  // Draw platforms
+  game.platforms.forEach(platform => {
+    ctx.fillStyle = '#95A5A6';
+    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    ctx.fillStyle = '#BDC3C7';
+    ctx.fillRect(platform.x, platform.y, platform.width, 5);
+  });
+  
+  // Draw stars
+  game.stars.forEach(star => {
+    ctx.fillStyle = '#F1C40F';
+    ctx.save();
+    ctx.translate(star.x + star.width/2, star.y + star.height/2);
+    ctx.rotate(Date.now() * 0.005);
+    drawStar(0, 0, 5, 10, 5);
+    ctx.restore();
+  });
+  
+  // Draw spikes
+  game.spikes.forEach(spike => {
+    ctx.fillStyle = '#E74C3C';
+    ctx.beginPath();
+    ctx.moveTo(spike.x, spike.y + spike.height);
+    ctx.lineTo(spike.x + spike.width/2, spike.y);
+    ctx.lineTo(spike.x + spike.width, spike.y + spike.height);
+    ctx.closePath();
+    ctx.fill();
+  });
+  
+  // Draw player
+  ctx.fillStyle = '#9B59B6';
+  ctx.fillRect(game.player.x, game.player.y, game.player.width, game.player.height);
+  
+  // Gravity indicator
+  ctx.fillStyle = game.gravityDirection > 0 ? '#E74C3C' : '#3498DB';
+  const arrowY = game.gravityDirection > 0 ? game.player.y + 25 : game.player.y - 10;
+  ctx.beginPath();
+  ctx.moveTo(game.player.x + 10, arrowY);
+  ctx.lineTo(game.player.x + 5, arrowY + (game.gravityDirection * -5));
+  ctx.lineTo(game.player.x + 15, arrowY + (game.gravityDirection * -5));
+  ctx.closePath();
+  ctx.fill();
+  
+  // Draw particles
+  game.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / 1000;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  
+  ctx.restore();
+}
+
+function generateLevel() {
+  game.platforms = [];
+  game.stars = [];
+  game.spikes = [];
+  
+  // Generate platforms
+  for (let x = 200; x < 2000; x += 150) {
+    const y = 200 + Math.random() * 200;
+    game.platforms.push({ x: x, y: y, width: 100, height: 20 });
+    
+    // Add star above platform
+    if (Math.random() < 0.7) {
+      game.stars.push({ x: x + 40, y: y - 30, width: 20, height: 20 });
+    }
+    
+    // Add spike on platform
+    if (Math.random() < 0.3) {
+      game.spikes.push({ x: x + 20, y: y - 15, width: 15, height: 15 });
+    }
+  }
+}
+
+function drawStar(x, y, spikes, outerRadius, innerRadius) {
+  let rot = Math.PI / 2 * 3;
+  let step = Math.PI / spikes;
+  
+  ctx.beginPath();
+  ctx.moveTo(x, y - outerRadius);
+  
+  for (let i = 0; i < spikes; i++) {
+    ctx.lineTo(x + Math.cos(rot) * outerRadius, y + Math.sin(rot) * outerRadius);
+    rot += step;
+    ctx.lineTo(x + Math.cos(rot) * innerRadius, y + Math.sin(rot) * innerRadius);
+    rot += step;
+  }
+  
+  ctx.lineTo(x, y - outerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function createFlipEffect() {
+  for (let i = 0; i < 10; i++) {
+    game.particles.push({
+      x: game.player.x + 10,
+      y: game.player.y + 10,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8,
+      color: '#9B59B6',
+      size: Math.random() * 4 + 2,
+      life: 500
+    });
+  }
+}
+
+function createStarEffect(x, y) {
+  for (let i = 0; i < 8; i++) {
+    game.particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      color: '#F1C40F',
+      size: Math.random() * 3 + 1,
+      life: 1000
+    });
+  }
+}
+
+function isColliding(a, b) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('flips').textContent = game.flips;
+}
+
+function endGame() {
+  game.running = false;
+  alert('Game Over! Score: ' + game.score + ', Flips: ' + game.flips);
+  document.getElementById('startBtn').textContent = 'Start Flipping';
+}
+</script>
+</body>
+</html>`;
 }
 
 function createColorMixerGame(): string {
-  return createBubblePopperGame(); // Simplified for now
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Mixer Puzzle</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); 
+  font-family: Arial, sans-serif; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  border: 2px solid #667eea;
+}
+.color-palette {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.color-btn {
+  width: 60px;
+  height: 60px;
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.color-btn:hover { transform: scale(1.1); }
+.mixer-area {
+  width: 200px;
+  height: 200px;
+  border: 3px solid white;
+  border-radius: 20px;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+.target-area {
+  width: 100px;
+  height: 100px;
+  border: 3px solid white;
+  border-radius: 15px;
+  margin: 20px auto;
+}
+.hud { font-size: 18px; margin: 15px 0; color: #667eea; }
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #667eea; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>Color Mixer Puzzle</h1>
+  <p style="margin-bottom: 15px;">Mix colors to match the target pattern</p>
+  <div class="hud">Score: <span id="score">0</span> | Level: <span id="level">1</span></div>
+  
+  <div>Target Color:</div>
+  <div class="target-area" id="target"></div>
+  
+  <div>Your Mix:</div>
+  <div class="mixer-area" id="mixer">Click colors to mix!</div>
+  
+  <div class="color-palette">
+    <div class="color-btn" style="background: #FF0000;" onclick="addColor('red')"></div>
+    <div class="color-btn" style="background: #00FF00;" onclick="addColor('green')"></div>
+    <div class="color-btn" style="background: #0000FF;" onclick="addColor('blue')"></div>
+    <div class="color-btn" style="background: #FFFF00;" onclick="addColor('yellow')"></div>
+    <div class="color-btn" style="background: #FF00FF;" onclick="addColor('magenta')"></div>
+    <div class="color-btn" style="background: #00FFFF;" onclick="addColor('cyan')"></div>
+  </div>
+  
+  <button onclick="clearMix()">Clear</button>
+  <button onclick="checkMatch()">Check Match</button>
+  <button onclick="newLevel()">New Level</button>
+</div>
+
+<script>
+let game = {
+  targetColor: { r: 255, g: 0, b: 0 },
+  mixedColor: { r: 128, g: 128, b: 128 },
+  colorComponents: [],
+  score: 0,
+  level: 1
+};
+
+const colors = {
+  red: { r: 255, g: 0, b: 0 },
+  green: { r: 0, g: 255, b: 0 },
+  blue: { r: 0, g: 0, b: 255 },
+  yellow: { r: 255, g: 255, b: 0 },
+  magenta: { r: 255, g: 0, b: 255 },
+  cyan: { r: 0, g: 255, b: 255 }
+};
+
+function addColor(colorName) {
+  game.colorComponents.push(colors[colorName]);
+  updateMix();
+}
+
+function updateMix() {
+  if (game.colorComponents.length === 0) {
+    game.mixedColor = { r: 128, g: 128, b: 128 };
+  } else {
+    let totalR = 0, totalG = 0, totalB = 0;
+    
+    game.colorComponents.forEach(color => {
+      totalR += color.r;
+      totalG += color.g;
+      totalB += color.b;
+    });
+    
+    const count = game.colorComponents.length;
+    game.mixedColor = {
+      r: Math.floor(totalR / count),
+      g: Math.floor(totalG / count),
+      b: Math.floor(totalB / count)
+    };
+  }
+  
+  const mixerElement = document.getElementById('mixer');
+  mixerElement.style.backgroundColor = 'rgb(' + game.mixedColor.r + ',' + game.mixedColor.g + ',' + game.mixedColor.b + ')';
+  mixerElement.textContent = game.colorComponents.length + ' colors mixed';
+}
+
+function clearMix() {
+  game.colorComponents = [];
+  updateMix();
+}
+
+function generateTarget() {
+  // Generate a target color that can be made by mixing
+  const baseColors = Object.values(colors);
+  const numColors = 2 + Math.floor(Math.random() * 3); // 2-4 colors
+  const selectedColors = [];
+  
+  for (let i = 0; i < numColors; i++) {
+    selectedColors.push(baseColors[Math.floor(Math.random() * baseColors.length)]);
+  }
+  
+  let totalR = 0, totalG = 0, totalB = 0;
+  selectedColors.forEach(color => {
+    totalR += color.r;
+    totalG += color.g;
+    totalB += color.b;
+  });
+  
+  game.targetColor = {
+    r: Math.floor(totalR / selectedColors.length),
+    g: Math.floor(totalG / selectedColors.length),
+    b: Math.floor(totalB / selectedColors.length)
+  };
+  
+  const targetElement = document.getElementById('target');
+  targetElement.style.backgroundColor = 'rgb(' + game.targetColor.r + ',' + game.targetColor.g + ',' + game.targetColor.b + ')';
+}
+
+function checkMatch() {
+  const tolerance = 30; // Allow some tolerance in color matching
+  
+  const rDiff = Math.abs(game.mixedColor.r - game.targetColor.r);
+  const gDiff = Math.abs(game.mixedColor.g - game.targetColor.g);
+  const bDiff = Math.abs(game.mixedColor.b - game.targetColor.b);
+  
+  if (rDiff <= tolerance && gDiff <= tolerance && bDiff <= tolerance) {
+    // Match!
+    game.score += 100;
+    game.level++;
+    alert('Perfect match! +100 points');
+    newLevel();
+  } else {
+    // Calculate closeness score
+    const totalDiff = rDiff + gDiff + bDiff;
+    const maxDiff = 255 * 3;
+    const closeness = 1 - (totalDiff / maxDiff);
+    const points = Math.floor(closeness * 50);
+    
+    game.score += points;
+    alert('Close! +' + points + ' points. Try to get closer!');
+  }
+  
+  updateDisplay();
+}
+
+function newLevel() {
+  generateTarget();
+  clearMix();
+  updateDisplay();
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('level').textContent = game.level;
+}
+
+// Initialize game
+generateTarget();
+updateMix();
+updateDisplay();
+</script>
+</body>
+</html>`;
 }
 
 function createAsteroidDodgerGame(): string {
-  return createBubblePopperGame(); // Simplified for now
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Asteroid Dodger</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(180deg, #000428 0%, #004e92 100%); 
+  font-family: 'Courier New', monospace; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
+}
+.game-container {
+  background: rgba(0,0,0,0.4);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #00BFFF;
+}
+#gameCanvas { 
+  border: 3px solid #00BFFF;
+  border-radius: 15px;
+  background: radial-gradient(circle, #000428 0%, #001122 100%);
+}
+.hud { 
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #00BFFF;
+}
+button { 
+  padding: 12px 24px; 
+  background: linear-gradient(45deg, #00BFFF, #8A2BE2);
+  color: white; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin: 5px;
+}
+h1 { color: #00BFFF; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>Asteroid Dodger</h1>
+  <p style="margin-bottom: 15px;">Pilot your ship through a dangerous asteroid field</p>
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Time: <span id="time">0</span>s</div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div style="font-size: 14px; margin: 10px 0;">ARROW KEYS to move • Avoid asteroids • Survive!</div>
+  <button onclick="startGame()" id="startBtn">Launch Ship</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let game = {
+  player: { x: 400, y: 500, width: 30, height: 30, vx: 0, vy: 0 },
+  asteroids: [],
+  particles: [],
+  score: 0,
+  time: 0,
+  running: false,
+  keys: {},
+  lastTime: 0
+};
+
+document.addEventListener('keydown', (e) => game.keys[e.code] = true);
+document.addEventListener('keyup', (e) => game.keys[e.code] = false);
+
+function startGame() {
+  if (game.running) return;
+  game.running = true;
+  game.score = 0;
+  game.time = 0;
+  game.asteroids = [];
+  game.particles = [];
+  game.player = { x: 400, y: 500, width: 30, height: 30, vx: 0, vy: 0 };
+  document.getElementById('startBtn').textContent = 'Flying...';
+  
+  // Start timer
+  const timer = setInterval(() => {
+    if (!game.running) {
+      clearInterval(timer);
+      return;
+    }
+    game.time++;
+    game.score += 1;
+    updateDisplay();
+  }, 1000);
+  
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!game.running) return;
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  // Player movement with momentum
+  if (game.keys['ArrowLeft']) game.player.vx -= 0.5;
+  if (game.keys['ArrowRight']) game.player.vx += 0.5;
+  if (game.keys['ArrowUp']) game.player.vy -= 0.5;
+  if (game.keys['ArrowDown']) game.player.vy += 0.5;
+  
+  // Apply friction
+  game.player.vx *= 0.9;
+  game.player.vy *= 0.9;
+  
+  // Update position
+  game.player.x += game.player.vx;
+  game.player.y += game.player.vy;
+  
+  // Keep player in bounds
+  game.player.x = Math.max(0, Math.min(canvas.width - game.player.width, game.player.x));
+  game.player.y = Math.max(0, Math.min(canvas.height - game.player.height, game.player.y));
+  
+  // Update asteroids
+  game.asteroids.forEach((asteroid, i) => {
+    asteroid.x += asteroid.vx;
+    asteroid.y += asteroid.vy;
+    asteroid.rotation += asteroid.rotSpeed;
+    
+    // Remove asteroids that are off screen
+    if (asteroid.x < -asteroid.size || asteroid.x > canvas.width + asteroid.size ||
+        asteroid.y < -asteroid.size || asteroid.y > canvas.height + asteroid.size) {
+      game.asteroids.splice(i, 1);
+    }
+    
+    // Check collision with player
+    if (isColliding(game.player, asteroid)) {
+      createExplosion(game.player.x, game.player.y);
+      endGame();
+    }
+  });
+  
+  // Spawn asteroids
+  if (Math.random() < 0.02 + game.time * 0.001) {
+    spawnAsteroid();
+  }
+  
+  // Update particles
+  game.particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 16;
+    p.size *= 0.99;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  });
+}
+
+function render() {
+  // Space background
+  ctx.fillStyle = '#000428';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Stars
+  for (let i = 0; i < 100; i++) {
+    const x = (i * 137.5) % canvas.width;
+    const y = (i * 73.3) % canvas.height;
+    const twinkle = Math.sin(Date.now() * 0.001 + i) * 0.5 + 0.5;
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.3 + twinkle * 0.7) + ')';
+    ctx.beginPath();
+    ctx.arc(x, y, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Player ship
+  ctx.save();
+  ctx.translate(game.player.x + game.player.width/2, game.player.y + game.player.height/2);
+  
+  // Ship body
+  ctx.fillStyle = '#00BFFF';
+  ctx.beginPath();
+  ctx.moveTo(0, -15);
+  ctx.lineTo(-10, 15);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(10, 15);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Engine glow
+  if (game.keys['ArrowUp']) {
+    ctx.fillStyle = '#FF6B6B';
+    ctx.beginPath();
+    ctx.moveTo(-5, 15);
+    ctx.lineTo(0, 25);
+    ctx.lineTo(5, 15);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  ctx.restore();
+  
+  // Asteroids
+  game.asteroids.forEach(asteroid => {
+    ctx.save();
+    ctx.translate(asteroid.x, asteroid.y);
+    ctx.rotate(asteroid.rotation);
+    
+    // Asteroid shape
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const radius = asteroid.size * (0.8 + Math.random() * 0.4);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    
+    // Asteroid highlights
+    ctx.fillStyle = '#CD853F';
+    ctx.beginPath();
+    ctx.arc(-asteroid.size/3, -asteroid.size/3, asteroid.size/4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+  
+  // Particles
+  game.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / 1000;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function spawnAsteroid() {
+  const side = Math.floor(Math.random() * 4);
+  let x, y, vx, vy;
+  
+  switch(side) {
+    case 0: // Top
+      x = Math.random() * canvas.width;
+      y = -50;
+      vx = (Math.random() - 0.5) * 4;
+      vy = Math.random() * 3 + 1;
+      break;
+    case 1: // Right
+      x = canvas.width + 50;
+      y = Math.random() * canvas.height;
+      vx = -(Math.random() * 3 + 1);
+      vy = (Math.random() - 0.5) * 4;
+      break;
+    case 2: // Bottom
+      x = Math.random() * canvas.width;
+      y = canvas.height + 50;
+      vx = (Math.random() - 0.5) * 4;
+      vy = -(Math.random() * 3 + 1);
+      break;
+    case 3: // Left
+      x = -50;
+      y = Math.random() * canvas.height;
+      vx = Math.random() * 3 + 1;
+      vy = (Math.random() - 0.5) * 4;
+      break;
+  }
+  
+  game.asteroids.push({
+    x: x,
+    y: y,
+    vx: vx,
+    vy: vy,
+    size: 20 + Math.random() * 30,
+    rotation: 0,
+    rotSpeed: (Math.random() - 0.5) * 0.1
+  });
+}
+
+function createExplosion(x, y) {
+  for (let i = 0; i < 20; i++) {
+    game.particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 10,
+      vy: (Math.random() - 0.5) * 10,
+      color: ['#FF6B6B', '#FFAA00', '#FFFF00', '#00BFFF'][Math.floor(Math.random() * 4)],
+      size: Math.random() * 6 + 3,
+      life: 1000
+    });
+  }
+}
+
+function isColliding(player, asteroid) {
+  const dx = player.x + player.width/2 - asteroid.x;
+  const dy = player.y + player.height/2 - asteroid.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < asteroid.size + 15;
+}
+
+function updateDisplay() {
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('time').textContent = game.time;
+}
+
+function endGame() {
+  game.running = false;
+  alert('Ship Destroyed! Final Score: ' + game.score + ' (Survived ' + game.time + ' seconds)');
+  document.getElementById('startBtn').textContent = 'Launch Ship';
+}
+</script>
+</body>
+</html>`;
 }
 
 async function saveAndReturnGame(supabaseUrl: string, supabaseKey: string, title: string, description: string, gameCode: string, thumbnailUrl: string) {
