@@ -4,7 +4,10 @@ import { supabase, Game } from '../lib/supabase';
 import { GameCard } from '../components/GameCard';
 import { GameModal } from '../components/GameModal';
 import { GenerationModal } from '../components/GenerationModal';
+import { PromptModal } from '../components/PromptModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { StatsPanel } from '../components/StatsPanel';
+import { MusicButton } from '../components/MusicButton';
 
 export function HomePage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -13,6 +16,7 @@ export function HomePage() {
   const [generating, setGenerating] = useState(false);
   const [generationStage, setGenerationStage] = useState('thinking');
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
+  const [showPromptModal, setShowPromptModal] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -55,7 +59,12 @@ export function HomePage() {
     );
   };
 
-  const generateNewGame = async () => {
+  const handleGenerateClick = () => {
+    setShowPromptModal(true);
+  };
+
+  const generateNewGame = async (userPrompt: string = '') => {
+    setShowPromptModal(false);
     setGenerating(true);
     setGenerationStage('thinking');
     
@@ -63,52 +72,85 @@ export function HomePage() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Missing Supabase configuration');
-      }
-
-      // Simulate generation stages with realistic delays
-      const stages = [
-        { id: 'thinking', delay: 3000 },
-        { id: 'idea', delay: 2500 },
-        { id: 'coding', delay: 4000 },
-        { id: 'art', delay: 3000 },
-        { id: 'magic', delay: 2000 },
-        { id: 'final', delay: 1500 }
-      ];
+      console.log('Environment check:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing'
+      });
       
-      // Show each stage with proper timing
-      for (let i = 0; i < stages.length; i++) {
-        setGenerationStage(stages[i].id);
-        if (i < stages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, stages[i].delay));
-        }
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing Supabase configuration. Please check your .env file contains VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
       }
 
-      console.log('Calling edge function...');
-      const response = await fetch(`${supabaseUrl}/functions/v1/generate-game`, {
+      const functionUrl = `${supabaseUrl}/functions/v1/generate-game`;
+      console.log('Starting game generation with prompt:', userPrompt || 'No prompt (surprise me)');
+      
+      // Start the API call immediately - no fake delays
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ 
+          user_prompt: userPrompt.trim() || null 
+        }),
+        // Add timeout to prevent hanging
+        signal: AbortSignal.timeout(120000) // 2 minutes timeout
       });
 
-      console.log('Response status:', response.status);
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Edge function error response:', errorText);
+        
+        // Provide more specific error messages
+        if (response.status === 404) {
+          throw new Error('Edge function not found. Please ensure the generate-game function is deployed to Supabase.');
+        } else if (response.status === 500) {
+          throw new Error(`Server error: ${errorText}. Check the edge function logs in your Supabase dashboard.`);
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error('Authentication error. Please check your Supabase keys and permissions.');
+        } else {
+          throw new Error(`Failed to generate game (${response.status}): ${errorText}`);
+        }
+      }
+
       const responseText = await response.text();
       console.log('Response text:', responseText);
 
-      if (!response.ok) {
-        throw new Error(`Failed to generate game: ${responseText}`);
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error(`Invalid response format from edge function: ${responseText.substring(0, 200)}...`);
       }
 
-      const result = JSON.parse(responseText);
       console.log('Generated game:', result);
       
       await fetchGames();
     } catch (error) {
       console.error('Error generating game:', error);
-      alert(`Error generating game: ${error.message}`);
+      
+      // Provide user-friendly error messages
+      let userMessage = 'Error generating game: ';
+      
+      if (error.name === 'AbortError') {
+        userMessage += 'Request timed out. The AI might be busy - please try again.';
+      } else if (error.message.includes('Failed to fetch')) {
+        userMessage += 'Network error. Please check your internet connection and Supabase configuration.';
+      } else {
+        userMessage += error.message;
+      }
+      
+      alert(userMessage);
     } finally {
       setGenerating(false);
     }
@@ -126,35 +168,38 @@ export function HomePage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  Infinite Arcade
+                  xinfinitygames
                 </h1>
                 <p className="text-gray-400 text-sm">Autonomous Mini-Game Generator</p>
               </div>
             </div>
             
-            <button
-              onClick={generateNewGame}
-              disabled={generating}
-              className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25"
-            >
-              {generating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-5 h-5" />
-                  <span>Generate Game</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center space-x-4">
+              <MusicButton />
+              <button
+                onClick={handleGenerateClick}
+                disabled={generating}
+                className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                {generating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5" />
+                    <span>Generate Game</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4 text-center relative overflow-hidden">
+      {/* Hero Section with Stats Panel */}
+      <section className="py-20 px-4 relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -162,24 +207,36 @@ export function HomePage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-pulse"></div>
         </div>
         
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="inline-flex items-center space-x-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-gray-700/50">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="text-gray-200 text-sm font-medium">AI-Powered Game Creation</span>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Left side - Hero Content */}
+            <div className="lg:col-span-2 text-center lg:text-left">
+              <div className="inline-flex items-center space-x-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-gray-700/50">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span className="text-gray-200 text-sm font-medium">AI-Powered Game Creation</span>
+              </div>
+              
+              <h2 className="text-5xl md:text-7xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Infinite
+                </span>
+                <br />
+                <span className="text-white drop-shadow-lg">Possibilities</span>
+              </h2>
+              
+              <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto lg:mx-0 leading-relaxed drop-shadow-sm">
+                Experience weird, funny, and chaotic browser mini-games generated completely by AI. 
+                Each game is unique, unexpected, and ready to play instantly.
+              </p>
+            </div>
+
+            {/* Right side - Compact Stats Panel */}
+            <div className="lg:col-span-1 flex justify-center lg:justify-end">
+              <div className="w-full max-w-sm">
+                <StatsPanel />
+              </div>
+            </div>
           </div>
-          
-          <h2 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Infinite
-            </span>
-            <br />
-            <span className="text-white drop-shadow-lg">Possibilities</span>
-          </h2>
-          
-          <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
-            Experience weird, funny, and chaotic browser mini-games generated completely by AI. 
-            Each game is unique, unexpected, and ready to play instantly.
-          </p>
         </div>
       </section>
 
@@ -255,6 +312,14 @@ export function HomePage() {
       <GameModal
         game={selectedGame}
         onClose={() => setSelectedGame(null)}
+      />
+
+      {/* Prompt Modal */}
+      <PromptModal
+        isOpen={showPromptModal}
+        onClose={() => setShowPromptModal(false)}
+        onSubmit={generateNewGame}
+        isGenerating={generating}
       />
 
       {/* Generation Modal */}

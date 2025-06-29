@@ -15,7 +15,43 @@ export function VotingButtons({ game, onVoteUpdate }: VotingButtonsProps) {
 
   useEffect(() => {
     checkUserVote();
-  }, [game.id]);
+    
+    // Set up real-time subscription for vote updates
+    const subscription = supabase
+      .channel(`game-votes-${game.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'games',
+          filter: `id=eq.${game.id}`
+        },
+        (payload) => {
+          console.log('Real-time vote update:', payload);
+          if (payload.new && typeof payload.new === 'object') {
+            const newGame = payload.new as Game;
+            setVoteScore(newGame.vote_score || 0);
+            setVoteCount(newGame.vote_count || 0);
+            
+            if (onVoteUpdate) {
+              onVoteUpdate(newGame.vote_score || 0, newGame.vote_count || 0);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [game.id, onVoteUpdate]);
+
+  // Update local state when game prop changes
+  useEffect(() => {
+    setVoteScore(game.vote_score || 0);
+    setVoteCount(game.vote_count || 0);
+  }, [game.vote_score, game.vote_count]);
 
   const checkUserVote = async () => {
     try {
@@ -91,7 +127,8 @@ export function VotingButtons({ game, onVoteUpdate }: VotingButtonsProps) {
         setUserVote(voteValue);
       }
 
-      // Fetch updated vote counts
+      // The real-time subscription will handle updating the UI
+      // But we can also fetch immediately for instant feedback
       const { data: gameData, error: gameError } = await supabase
         .from('games')
         .select('vote_score, vote_count')
